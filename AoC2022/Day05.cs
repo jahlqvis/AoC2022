@@ -86,7 +86,7 @@ namespace AoC2022
             }
 
             Parse("Input\\Day05.txt", MoveA);
-            var elapsed = DateTime.Now.Microsecond - start;
+            
 
             string getTopChars()
             {
@@ -97,7 +97,7 @@ namespace AoC2022
                 }
                 return result;
             }
-            
+            var elapsed = DateTime.Now.Microsecond - start;
             Console.WriteLine($"Day 05A: {getTopChars()} : {elapsed} μs");
         }
         public void RunB()
@@ -121,7 +121,7 @@ namespace AoC2022
             }
 
             Parse("Input\\Day05.txt", MoveB);
-            var elapsed = DateTime.Now.Microsecond - start;
+            
 
             string getTopChars()
             {
@@ -132,7 +132,7 @@ namespace AoC2022
                 }
                 return result;
             }
-
+            var elapsed = DateTime.Now.Microsecond - start;
             Console.WriteLine($"Day 05B: {getTopChars()} : {elapsed} μs");
         }
     }
