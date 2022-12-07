@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -57,25 +58,33 @@ namespace AoC2022
             return temp;
         }
 
-        int TraversePostorderSetSizes(Node node)
+        int CalculateDirectorySizes(Node node)
         {
-            int TotalSize = 0;
-            foreach(var n in node.Childs)
+            int size = 0;
+
+            if(node.Childs.Count == 0)
             {
-                TotalSize += TraversePostorderSetSizes(n);
+                return node.Size;
             }
-            if(node.IsDir)
+            else
             {
-                node.Size = TotalSize;
+                foreach (var n in node.Childs)
+                {
+                    size += CalculateDirectorySizes(n);
+                }
+                if (node.IsDir)
+                {
+                    node.Size = size;
+                }
+                return node.Size;
             }
-            return node.Size;
         }
 
         public int TotalUsedDiskSpace=0;
         public int NeedToFree;
         public List<int> FoundNodeSizes = new List<int>();
 
-        int TraversePostorderFindDirA(Node node)
+        int FindDirectoriesSizeLessThan(Node node)
         {
             //int totalSize = 0;
             int size = 0;
@@ -83,7 +92,7 @@ namespace AoC2022
             {
                 if (n.IsDir)
                 {
-                    size = TraversePostorderFindDirA(n);
+                    size = FindDirectoriesSizeLessThan(n);
                     if (n.Size <= 100000)
                     {
                         TotalUsedDiskSpace += n.Size + size;
@@ -143,6 +152,7 @@ namespace AoC2022
             TraversePostorderFindDirB(Root);
             FoundNodeSizes.Sort();
 
+            Debug.Assert(FoundNodeSizes[0] == 5025657);
             var elapsed = DateTime.Now.Microsecond - start;
             Console.WriteLine($"Day 07B: {FoundNodeSizes[0]} : {elapsed} μs");
         }
@@ -212,8 +222,9 @@ namespace AoC2022
                 }
             }
 
-            TraversePostorderSetSizes(Root);
-            size = TraversePostorderFindDirA(Root);
+            CalculateDirectorySizes(Root);
+            size = FindDirectoriesSizeLessThan(Root);
+            Debug.Assert(TotalUsedDiskSpace == 1915606);
 
             var elapsed = DateTime.Now.Microsecond - start;
             Console.WriteLine($"Day 07A: {TotalUsedDiskSpace} : {elapsed} μs");
