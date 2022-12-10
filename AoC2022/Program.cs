@@ -1,6 +1,6 @@
 ﻿using AoC2022;
 
-var day = new Day09();
-//day.RunA();
-day.RunB();
+var day = new Day10();
+day.RunA();
+//day.RunB();
 
