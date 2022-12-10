@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 using static AoC2022.Day09;
 
 namespace AoC2022
@@ -43,49 +44,70 @@ namespace AoC2022
             }
         }
 
-        private Rope _rope = new Rope(new Coordinate(0, 0), new Coordinate(0, 0));
+        private Rope _rope;
         private List<string> _commands = new List<string>();
         public class Rope
         {
-            private Coordinate _head { get; set; }
-            private Coordinate _tail { get; set; }
+            List<Coordinate> _knots= new List<Coordinate>();
+            
+            public Rope(int numKnots)
+            {
+                for(int i = 0;i< numKnots; i++)
+                {
+                    _knots.Add(new Coordinate(0,0));
+                }
+            }
+
             public Rope(Coordinate head, Coordinate tail)
             {
-                _head = head;
-                _tail = tail;
+                _knots.Add(tail);
+                _knots.Add(head);
             }
+
             private List<Coordinate> _tailPositions = new List<Coordinate>() { new Coordinate(0, 0) };
 
             public void MoveHead(string direction)
             {
-                switch(direction)
+                switch (direction)
                 {
                     case "U":
-                        _head.Y++;
+                        _knots[0].Y++;
                         break;
                     case "D":
-                        _head.Y--;
+                        _knots[0].Y--;
                         break;
                     case "R":
-                        _head.X++;
+                        _knots[0].X++;
                         break;
                     case "L":
-                        _head.X--;
+                        _knots[0].X--;
                         break;
                     default:
                         throw new ArgumentException("Couldn't parse command");
                 }
-                MoveTail();
-            }
+                for (int i = 0; i <= _knots.Count - 2; i++)
+                {
+                    var prev = _knots[i];
+                    var next = _knots[i + 1];
+                    MoveKnots(ref prev, ref next);
+                    //_knots[i] = prev;
+                    //_knots[i + 1] = next;
 
+                    if (i == _knots.Count - 2)
+                    {
+                        //Console.WriteLine($"T: {_knots[i+1].X}, {_knots[i+1].Y}");
+                        _tailPositions.Add(new Coordinate(_knots[i + 1].X, _knots[i + 1].Y));
+                    }
+                }
+            }
             public List<Coordinate> GetTailPositions()
             {
                 return _tailPositions;
             }
 
-            private void MoveTail()
+            private void MoveKnots(ref Coordinate prev, ref Coordinate next)
             {
-                if (_head == _tail)
+                if (prev == next)
                     // if Tail is same place as Head
                     return;
 
@@ -93,84 +115,48 @@ namespace AoC2022
                 // 0,1 1,1 2,1
                 // 0,0 1,0 2,0
 
-                for(int x=_head.X-1;x<=_head.X+1; x++)
+                bool VicinityCheck(ref Coordinate prev, ref Coordinate next)
                 {
-                    for (int y = _head.Y - 1; y <= _head.Y + 1; y++)
+                    for (int x = prev.X - 1; x <= prev.X + 1; x++)
                     {
-                        if (_tail.X == x && _tail.Y == y)
-                            // if Tail is just one tile away 
-                            return;
+                        for (int y = prev.Y - 1; y <= prev.Y + 1; y++)
+                        {
+                            if (next.X == x && next.Y == y)
+                                return true;
+                        }
+                    }
+                    return false;
+                }
+                
+                while(!VicinityCheck(ref prev, ref next))
+                {
+                    if(prev.X > next.X)
+                    {
+                        next.X++;
+                    }
+                    else if(prev.X < next.X)
+                    {
+                        next.X--;
+                    }
+                    else
+                    {
+                        // do nothing
+                    }
+
+                    if(prev.Y > next.Y)
+                    {
+                        next.Y++;
+                    }
+                    else if(prev.Y < next.Y)
+                    {
+                        next.Y--;
+                    }
+                    else
+                    {
+                        // do nothing
                     }
                 }
 
-                // same row
-                if (_head.X == _tail.X)
-                {
-                    if (_head.Y > _tail.Y)
-                        _tail.Y++;
-                    else
-                        _tail.Y--;
-                    
-                }
-                // same column
-                else if (_head.Y == _tail.Y)
-                {
-                    if (_head.X > _tail.X)
-                        _tail.X++;
-                    else
-                        _tail.X--;
-                }
-                // both row and column different
-                else
-                {
-                    if(_head.X == _tail.X + 2 && _head.Y == _tail.Y + 1)
-                    {
-                        _tail.X++;
-                        _tail.Y++;
-                    }
-                    else if (_head.X == _tail.X + 2 && _head.Y == _tail.Y - 1)
-                    {
-                        _tail.X++;
-                        _tail.Y--;
-                    }
-                    else if (_head.X == _tail.X - 2 && _head.Y == _tail.Y + 1)
-                    {
-                        _tail.X--;
-                        _tail.Y++;
-                    }
-                    else if (_head.X == _tail.X - 2 && _head.Y == _tail.Y - 1)
-                    {
-                        _tail.X--;
-                        _tail.Y--;
-                    }
-                    else if (_head.X == _tail.X + 1 && _head.Y == _tail.Y + 2)
-                    {
-                        _tail.X++;
-                        _tail.Y++;
-                    }
-                    else if (_head.X == _tail.X + 1 && _head.Y == _tail.Y - 2)
-                    {
-                        _tail.X++;
-                        _tail.Y--;
-                    }
-                    else if (_head.X == _tail.X - 1 && _head.Y == _tail.Y + 2)
-                    {
-                        _tail.X--;
-                        _tail.Y++;
-                    }
-                    else if (_head.X == _tail.X - 1 && _head.Y == _tail.Y - 2)
-                    {
-                        _tail.X--;
-                        _tail.Y--;
-                    }
-                    else
-                    {
-                        throw new ArgumentException("Should not reach this state");
-                    }
-                }
-
-                _tailPositions.Add(new Coordinate(_tail.X, _tail.Y));
-                Console.WriteLine($"T: {_tail.X}, {_tail.Y}");
                 return;
             }
         }
@@ -187,6 +173,7 @@ namespace AoC2022
         public void RunA()
         {
             var start = DateTime.Now.Microsecond;
+            _rope = new Rope(new Coordinate(0, 0), new Coordinate(0, 0));
             Parse("Input\\Day09.txt");
             foreach(var cmd in _commands)
             {
@@ -202,6 +189,27 @@ namespace AoC2022
             var uniqueCoords = tailCoords.Distinct(comparer);
             var elapsed = DateTime.Now.Microsecond - start;
             Console.WriteLine($"Day 09A: {uniqueCoords.Count()} : {elapsed} μs");
+        }
+
+        public void RunB()
+        {
+            var start = DateTime.Now.Microsecond;
+            _rope = new Rope(10);
+            Parse("Input\\Day09.txt");
+            foreach (var cmd in _commands)
+            {
+                var temp = cmd.Split(" ");
+                for (int n = 1; n <= int.Parse(temp[1]); n++)
+                {
+                    _rope.MoveHead(temp[0]);
+                }
+            }
+
+            var tailCoords = _rope.GetTailPositions();
+            var comparer = new CoordinateEqualityComparer();
+            var uniqueCoords = tailCoords.Distinct(comparer);
+            var elapsed = DateTime.Now.Microsecond - start;
+            Console.WriteLine($"Day 09B: {uniqueCoords.Count()} : {elapsed} μs");
         }
     }
 }
