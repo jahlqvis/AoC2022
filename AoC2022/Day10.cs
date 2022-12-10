@@ -74,5 +74,117 @@ namespace AoC2022
             var elapsed = DateTime.Now.Microsecond - start;
             Console.WriteLine($"Day 10A: {signalstrengthSum} : {elapsed} μs");
         }
+
+        private char[,] _screen;
+
+        private void DrawScreen()
+        {
+            
+            Console.Clear();
+            var origRow = Console.CursorTop;
+            var origCol = Console.CursorLeft;
+
+            int row = origRow;
+            
+            for(int y=0;y<6;y++)
+            {
+                for (int x = 0; x < 40; x++)
+                {
+                    Console.SetCursorPosition(origRow + x, origCol + y);
+                    Console.Write(_screen[x, y]);
+                }
+            }
+            Console.SetCursorPosition(origRow, origCol + 8);
+        }
+        public void RunB()
+        {
+            int worker = 0;
+            
+            var start = DateTime.Now.Microsecond;
+            Parse("Input\\Day10.txt");
+            
+            string currentCommand = "";
+            int pixelY = 0;
+            int pixelX = 0;
+
+            // LCD
+            _screen = new char[40, 6];
+
+            // CPU
+            for (int cycle = 1; ; cycle++)
+            {
+                // Core
+                if (worker == 0)
+                {
+                    // Finnish up previous command
+                    if (currentCommand.Split(' ')[0] == "addx")
+                    {
+                        _registerX += int.Parse(currentCommand.Split(" ")[1]);
+                    }
+
+                    // Read new command
+                    try
+                    {
+                        currentCommand = _code.Pop();
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        // end of program
+                        break;
+                    }
+                    
+                    if (currentCommand.Split(' ')[0] == "noop")
+                    {
+                        // Do nothing
+                        worker = 0;
+
+                    }
+                    else if (currentCommand.Split(' ')[0] == "addx")
+                    {
+                        // Wait one cycle
+                        worker = 1;
+                    }
+                }
+                else
+                {
+                    // Pretend to work
+                    worker--;
+                }
+
+                // Screen
+                if(pixelX == _registerX-1 || pixelX == _registerX || pixelX == _registerX + 1)
+                {
+                    _screen[pixelX, pixelY] = '.';
+                }
+                else
+                {
+                    _screen[pixelX, pixelY] = '#';
+                }
+                
+                
+                if (pixelX == 39)
+                {
+                    if(pixelY==5)
+                    {
+                        pixelY = 0;
+
+                        // redraw
+                        //DrawScreen();
+                    }
+                    else
+                    {
+                        pixelY++;
+                    }
+                    pixelX = 0;
+                }
+                else
+                {
+                    pixelX++;
+                }
+            }
+            DrawScreen();
+            var elapsed = DateTime.Now.Microsecond - start;
+            Console.WriteLine($"Day 10B: {elapsed} μs");
+        }
     }
 }
