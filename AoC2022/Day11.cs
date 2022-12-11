@@ -21,7 +21,8 @@ namespace AoC2022
             private int _operationData;
             private int _testTrueIndex;
             private int _testFalseIndex;
-            private int _worryDivisor = 1;
+            private eOperation _worryOperation;
+            private int _worryDivisor = 3;
             private long _inspectionsCount = 0;
 
             public List<int> Items {  get { return _items; }  set { _items = value; } }
@@ -33,13 +34,17 @@ namespace AoC2022
             public int TestFalseIndex { get => _testFalseIndex; set => _testFalseIndex = value; }
             public int WorryDivisor { get => _worryDivisor; set => _worryDivisor = value; }
             public long InspectionsCount { get => _inspectionsCount; set => _inspectionsCount = value; }
+            public eOperation WorryOperation { get => _worryOperation; set => _worryOperation = value; }
 
             public enum eOperation
             {
                 Unset = 0,
                 Add = 1,
                 Multiply = 2,
-                Square = 3
+                Square = 3,
+                Sub = 4,
+                Divide = 5,
+                SquareRoot = 6
             };
             public Monkey()
             {
@@ -86,7 +91,30 @@ namespace AoC2022
                 }
                 _inspectionsCount++;
 
-                //_items[i] = (int)_items[i] / WorryDivisor;
+                switch (_worryOperation)
+                {
+                    case eOperation.Add:
+                        _items[i] = _items[i] + WorryDivisor;
+                        break;
+                    case eOperation.Multiply:
+                        _items[i] = _items[i] * WorryDivisor;
+                        break;
+                    case eOperation.Square:
+                        _items[i] = _items[i] * _items[i];
+                        break;
+                    case eOperation.Sub:
+                        _items[i] = _items[i] - WorryDivisor;
+                        break;
+                    case eOperation.Divide:
+                        _items[i] = _items[i] / WorryDivisor;
+                        break;
+                    case eOperation.SquareRoot:
+                        _items[i] = (int)Math.Sqrt(_items[i]);
+                        break;
+                    default:
+                        throw new ArgumentException("Unknown operation");
+                }
+                
                 return true;
             }
 
@@ -249,38 +277,68 @@ namespace AoC2022
             var start = DateTime.Now.Microsecond;
 
             Parse("Input\\Day11test.txt");
-            const int maxRounds = 10000;
+            const int maxRounds = 20;
 
-            for (int i = 1; i <= maxRounds; i++)
+            const int minData = -1000;
+            const int maxData = 1000;
+            Monkey.eOperation[] ops = new Monkey.eOperation[6] { Monkey.eOperation.Add, Monkey.eOperation.Multiply, Monkey.eOperation.Square, Monkey.eOperation.Sub, Monkey.eOperation.Divide, Monkey.eOperation.SquareRoot };
+
+            List<Monkey> monkeys=null;
+
+            for (int op = 0; op < ops.Count(); op++)
             {
-                for (int m = 0; m < MonkeyList.Count; m++)
+                for(int dat= minData; dat<=maxData;dat++)
                 {
-                    for (int k = 0; k < MonkeyList[m].Items.Count; k++)
-                    {
-                        MonkeyList[m].RunOperation(k);
-                        var moveTo = MonkeyList[m].Test(k);
-                        MonkeyList[moveTo].Items.Add(MonkeyList[m].Items[k]);
-                    }
-                    MonkeyList[m].Items.Clear();
-                }
-                //foreach(var m in MonkeyList)
-                //{
-                //    Console.WriteLine($"Monkey {m.Id}: {m.ToString()}");
-                //}
-                //Console.WriteLine("");
+                    if (dat == 0) continue;
 
-                if(i == 1 || i == 20 || i % 1000 == 0)
-                {
-                    Console.WriteLine($"== After round {i} ==");
-                    foreach (var m in MonkeyList)
+                    monkeys = new List<Monkey>(MonkeyList);
+                    foreach (var m in monkeys)
                     {
-                        Console.WriteLine($"Monkey: {m.Id} Inspections: {m.InspectionsCount}");
+                        m.WorryOperation = ops[op];
+                        m.WorryDivisor = dat;
                     }
-                    Console.WriteLine($"");
+                    //Console.WriteLine($"Operation: {op} Data: {dat}");
+                    //Console.WriteLine($"");
+                    for (int round = 1; round <= maxRounds; round++)
+                    {
+                        for (int monkey = 0; monkey < monkeys.Count; monkey++)
+                        {
+                            for (int index = 0; index < monkeys[monkey].Items.Count; index++)
+                            {
+                                monkeys[monkey].RunOperation(index);
+                                var moveTo = monkeys[monkey].Test(index);
+                                monkeys[moveTo].Items.Add(monkeys[monkey].Items[index]);
+                            }
+                            monkeys[monkey].Items.Clear();
+                        }
+                        
+                        if (round == 1 || round == 20 || round % 1000 == 0)
+                        {
+                            //Console.WriteLine($"== After round {round} ==");
+                            //foreach (var m in monkeys)
+                            //{
+                            //    Console.WriteLine($"Monkey: {m.Id} Inspections: {m.InspectionsCount}");
+                            //}
+                            //Console.WriteLine($"");
+
+                            if (monkeys[0].InspectionsCount == 99 &&
+                                monkeys[1].InspectionsCount == 97 &&
+                                monkeys[2].InspectionsCount == 8 &&
+                                monkeys[3].InspectionsCount == 103)
+                            {
+                                Console.WriteLine("===");
+                                Console.WriteLine($"Found the right code -> Operation: {op} Data {dat}");
+                                Console.WriteLine("===");
+                                return;
+                            }
+                        }
+
+                    }
                 }
-                
             }
-            var monkeyOrderedList = MonkeyList.OrderByDescending(x => x.InspectionsCount).ToList();
+
+            
+            var monkeyOrderedList = monkeys.OrderByDescending(x => x.InspectionsCount).ToList();
 
            
 
